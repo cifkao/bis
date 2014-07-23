@@ -6,35 +6,44 @@
 #define NONE symbols // a value that does not occur in the data
 
 size_t rle(symbol *data, symbol **output, size_t length, size_t symbols){
-  *output = (symbol *)malloc_or_die(length*3/2*sizeof(symbol));
+  symbol_buffer buf;
+  buf.size = length*3/2;
+  buf.dataLength = 0;
+  buf.buffer = NULL;
 
   symbol last = NONE;
   int count = 0;
-  int i, j=0; // we read from data[i] and write to *output[j]
+  int i;
   for(i=0; i<length; i++){
-    symbol c = data[i];
-    if(c==last){
+    symbol s = data[i];
+    if(s==last){
       count++;
       if(count<2){
-        (*output)[j++] = c;
+        buffer_put(s, &buf);
       }
       if(count==symbols){
-        (*output)[j++] = symbols-1;
+        buffer_put(symbols-1, &buf);
         last = NONE;
         count = 0;
       }
     }else{
       if(count>=1){
-        (*output)[j++] = count-1;
+        buffer_put(count-1, &buf);
       }
       count = 0;
-      last = c;
+      last = s;
 
-      (*output)[j++] = c;
+      buffer_put(s, &buf);
     }
   }
 
-  return j;
+  // last run length
+  if(count>=1){
+    buffer_put(count-1, &buf);
+  }
+
+  *output = buf.buffer;
+  return buf.dataLength;
 }
 
 size_t unrle(symbol *data, symbol **output, size_t length, size_t symbols){

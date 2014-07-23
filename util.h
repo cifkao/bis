@@ -24,4 +24,9 @@ void die_eof();
 
 void die(char *message);
 
+void set_finalize(void (*f)());
+
+
+void dump_data(symbol *data, size_t length, char *label);
+
 #endif
