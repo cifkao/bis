@@ -38,7 +38,12 @@ int bitfile_get_bit(file *f){
   return (f->bitBuff >> f->bitBuffSize) & 1;
 }
 
-int bitfile_get_symbol(file *f, int count){
+void bitfile_discard_bits(file *f){
+  if(f->bitBuffSize != CHAR_BIT)
+    f->bitBuffSize = 0;
+}
+
+int bitfile_get_symbol(file *f, size_t count){
   int bit;
   symbol s = 0;
   while(count>0 && (bit = bitfile_get_bit(f)) != EOF){
@@ -69,9 +74,10 @@ void bitfile_put_bit(file *f, int bit){
     bitfile_flush_bits(f);
 }
 
-void bitfile_put_symbol(file *f, symbol s, int count){
-  for(count--; count>=0; count--){
-    bitfile_put_bit(f, (s >> count) & 1);
+void bitfile_put_symbol(file *f, symbol s, size_t count){
+  int i;
+  for(i=count-1; i>=0; i--){
+    bitfile_put_bit(f, (s >> i) & 1);
   }
 }
 

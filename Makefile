@@ -1,4 +1,4 @@
-CC=cc -ggdb
+CC=cc -ggdb -Wall
 
 bis: main.o bwt.o rle.o mtf.o huffman.o util.o fileutil.o
 	cc -o bis main.o bwt.o rle.o mtf.o huffman.o util.o fileutil.o

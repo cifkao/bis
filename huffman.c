@@ -22,12 +22,12 @@ typedef struct heap_node heap_node;
  */
 struct code{
   unsigned char code[(HUF_SYMBOLS+CHAR_BIT-1)/CHAR_BIT];
-  int length;
+  size_t length;
 };
 typedef struct code code;
 
 
-void heap_push(heap_node **heap, int size, heap_node *node){
+void heap_push(heap_node **heap, size_t size, heap_node *node){
   heap[++size] = node;
 
   int i = size, j = i;
@@ -41,7 +41,7 @@ void heap_push(heap_node **heap, int size, heap_node *node){
   }
 }
 
-heap_node *heap_pop(heap_node **heap, int size){
+heap_node *heap_pop(heap_node **heap, size_t size){
   heap_node *out = heap[1];
   heap[1] = heap[size--];
 
@@ -61,7 +61,7 @@ heap_node *heap_pop(heap_node **heap, int size){
   return out;
 }
 
-huf_tree huf_build_tree(symbol *data, int length){
+huf_tree huf_build_tree(symbol *data, size_t length){
   huf_node *trees =
     (huf_node *)malloc_or_die(2*HUF_SYMBOLS*sizeof(huf_node));
   huf_node *newTree = trees;
@@ -71,16 +71,18 @@ huf_tree huf_build_tree(symbol *data, int length){
 
   heap_node *_heap[HUF_SYMBOLS];
   heap_node **heap = _heap-1;
-  int heapSize = 0;
+  size_t heapSize = 0;
 
   int freqs[HUF_SYMBOLS];
-  int i;
+  symbol s; int i;
+  for(s=0; s<HUF_SYMBOLS; s++){
+    freqs[s] = 0;
+  }
   for(i=0; i<length; i++){
     freqs[data[i]]++;
   }
   freqs[HUF_EOF] = 1;
 
-  symbol s;
   for(s=0; s<HUF_SYMBOLS; s++){
     if(freqs[s]>0){
       newTree->symbol = s;
@@ -123,8 +125,8 @@ void huf_write_tree(file *f, huf_tree tree){
 }
 
 void build_code_table(huf_node *node, code *codes, code *currentCode){
-  int byteOffset = currentCode->length / CHAR_BIT;
-  int bitOffset = currentCode->length % CHAR_BIT;
+  size_t byteOffset = currentCode->length / CHAR_BIT;
+  size_t bitOffset = currentCode->length % CHAR_BIT;
   if(node->left){ // internal node
     currentCode->length++;
     currentCode->code[byteOffset] &= ~(1 << bitOffset);
@@ -137,7 +139,7 @@ void build_code_table(huf_node *node, code *codes, code *currentCode){
   }
 }
 
-void huf_encode(file *f, symbol *data, int length, huf_tree tree){
+void huf_encode(file *f, symbol *data, size_t length, huf_tree tree){
   code codes[HUF_SYMBOLS];
   code currentCode;
   currentCode.length = 0;
@@ -174,53 +176,51 @@ int decode_symbol(file *f, huf_tree tree){
   return node->symbol;
 }
 
-int huf_decode(file *f, symbol **data, huf_tree tree){
-  int buffSize = 1024;
-  int length = 0;
-  *data = (symbol *)malloc_or_die(buffSize*sizeof(symbol));
+size_t huf_decode(file *f, symbol **data, huf_tree tree){
+  symbol_buffer buf;
+  buf.size = 1024;
+  buf.dataLength = 0;
+  buf.buffer = NULL;
   int s = decode_symbol(f, tree);
   if(s==EOF)
     return 0;
   do{
     if(s==EOF) die_eof();
-    length++;
-    if(length==buffSize){
-      buffSize *= 2;
-      *data = (symbol *)realloc_or_die(*data, buffSize*sizeof(symbol));
-    }
-
-    (*data)[length-1] = s;
-
+    buffer_put(s, &buf);
     s = decode_symbol(f, tree);
   }while(s!=HUF_EOF);
 
-  return length;
+  *data = buf.buffer;
+  return buf.dataLength;
 }
 
 /* Build the Huffman tree recursively.
  */
-void read_tree(file *f, huf_node *root){
+void read_tree(file *f, huf_node *node, bool isRoot){
   int bit = bitfile_get_bit(f);
-  if(bit==EOF) die_eof();
+  if(bit==EOF){
+    if(isRoot) return;
+    else die_eof();
+  }
   if(!bit){ // internal node
     huf_node *left = (huf_node *)malloc_or_die(2*sizeof(huf_node));
     huf_node *right = left+1;
-    root->left = left;
-    root->right = right;
-    read_tree(f, left);
-    read_tree(f, right);
+    node->left = left;
+    node->right = right;
+    read_tree(f, left, false);
+    read_tree(f, right, false);
   }else{ // leaf node
     int s = bitfile_get_symbol(f, SYMBOL_LENGTH);
     if(s==EOF) die_eof();
-    root->symbol = s;
-    root->left = NULL;
-    root->right = NULL;
+    node->symbol = s;
+    node->left = NULL;
+    node->right = NULL;
   }
 }
 
 huf_tree huf_read_tree(file *f){
   huf_node *root = (huf_node *)malloc_or_die(sizeof(huf_node));
-  read_tree(f, root);
+  read_tree(f, root, true);
   huf_tree t = {root, root};
   return t;
 }

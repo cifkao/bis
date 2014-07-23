@@ -5,7 +5,7 @@
 
 #define NONE symbols // a value that does not occur in the data
 
-int rle(symbol *data, symbol **output, int length, int symbols){
+size_t rle(symbol *data, symbol **output, size_t length, size_t symbols){
   *output = (symbol *)malloc_or_die(length*3/2*sizeof(symbol));
 
   symbol last = NONE;
@@ -37,35 +37,23 @@ int rle(symbol *data, symbol **output, int length, int symbols){
   return j;
 }
 
-int buffSize;
-int buffPtr;
-void put(symbol c, symbol **output){
-  if(*output==NULL){
-    *output = (symbol *)malloc_or_die(buffSize*sizeof(symbol));
-  }else if(buffPtr==buffSize){
-    buffSize *= 2;
-    *output = (symbol *)realloc_or_die(*output, buffSize*sizeof(symbol));
-  }
-
-  (*output)[buffPtr++] = c;
-}
-
-int unrle(symbol *data, symbol **output, int length, int symbols){
-  *output = NULL;
-  buffSize = 2*length;
-  buffPtr = 0;
+size_t unrle(symbol *data, symbol **output, size_t length, size_t symbols){
+  symbol_buffer buf;
+  buf.size = 2*length;
+  buf.dataLength = 0;
+  buf.buffer = NULL;
 
   symbol last = NONE;
   int j;
   for(j=0; j<length; j++){
     symbol c = data[j];
-    put(c, output);
+    buffer_put(c, &buf);
 
     if(c==last){
       int count = data[++j];
       int i;
       for(i=0; i<count; i++){
-        put(c, output);
+        buffer_put(c, &buf);
       }
       last = NONE;
     }else{
@@ -73,5 +61,6 @@ int unrle(symbol *data, symbol **output, int length, int symbols){
     }
   }
 
-  return j;
+  *output = buf.buffer;
+  return buf.dataLength;
 }

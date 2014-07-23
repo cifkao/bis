@@ -7,7 +7,7 @@
 #define BWT_EOF 256
 
 symbol *data;
-int length;
+size_t length;
 
 int bwtcmp(const void *A, const void *B){
   const int a = *(int *)A;
@@ -24,13 +24,7 @@ int bwtcmp(const void *A, const void *B){
   return cmp;
 }
 
-int cmp(const void *A, const void *B){
-  const int a = *(symbol *)A;
-  const int b = *(symbol *)B;
-  return a-b;
-}
-
-void bwt(symbol *_data, symbol *output, int _length){
+void bwt(symbol *_data, symbol *output, size_t _length){
   data = _data;
   length = _length+1;
   data[length-1] = BWT_EOF;
@@ -53,7 +47,7 @@ void bwt(symbol *_data, symbol *output, int _length){
   free(perm);
 }
 
-void unbwt(symbol *L, symbol *output, int length){
+void unbwt(symbol *L, symbol *output, size_t length){
   /* P[i]:  the number of instances of L[i] in L[0,...,i-1]
    *        (L[i] is the P[i]-th instance, counting from 0)
    * C[s]:  the number of instances in L of symbols preceding s
@@ -61,7 +55,12 @@ void unbwt(symbol *L, symbol *output, int length){
   int *P = (int *)malloc_or_die(length*sizeof(int));
   int *C = (int *)malloc_or_die(BWT_SYMBOLS*sizeof(int));
 
-  int i, I;
+  int i, I; symbol s;
+
+  for(s=0; s<BWT_SYMBOLS; s++){
+    C[s] = 0;
+  }
+
   // count all occurences of s into C[s] for every symbol s, build P,
   // also find the EOF symbol
   for(i=0; i<length; i++){
@@ -72,7 +71,7 @@ void unbwt(symbol *L, symbol *output, int length){
   }
 
   // finish building C
-  int sum = 0; symbol s;
+  int sum = 0; 
   for(s=0; s<BWT_SYMBOLS; s++){
     sum += C[s];
     C[s] = sum - C[s];
@@ -80,8 +79,9 @@ void unbwt(symbol *L, symbol *output, int length){
 
   // decode the data
   i = P[I] + C[L[I]];
+  length--; // skip the EOF symbol
   int j;
-  for(j=1; j<length; j++){
+  for(j=1; j<=length; j++){
     output[length-j] = L[i];
     i = P[i] + C[L[i]];
   }

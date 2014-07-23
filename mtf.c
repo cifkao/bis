@@ -2,7 +2,7 @@
 #include "util.h"
 #include "mtf.h"
 
-void mtf(symbol *data, int length){
+void mtf(symbol *data, size_t length){
   symbol bookstack[MTF_SYMBOLS];
 
   int i, j;
@@ -18,17 +18,18 @@ void mtf(symbol *data, int length){
     }
 
     // encode it
+    symbol tmp = data[i];
     data[i] = j;
 
     // move to front
     for(; j>0; j--){
       bookstack[j] = bookstack[j-1];
     }
-    bookstack[0] = data[i];
+    bookstack[0] = tmp;
   }
 }
 
-void unmtf(symbol *data, int length){
+void unmtf(symbol *data, size_t length){
   symbol bookstack[MTF_SYMBOLS];
 
   int i, j;

@@ -28,10 +28,14 @@ int file_get_char(file *f);
  */
 int bitfile_get_bit(file *f);
 
+/* Empty the bit buffer and start reading from the next byte.
+ */
+void bitfile_discard_bits(file *f);
+
 /* Read a symbol number from the file, bit by bit, MSB-first. The number
  * of bits used to represent the symbol is passed as a parameter.
  */
-int bitfile_get_symbol(file *f, int count);
+int bitfile_get_symbol(file *f, size_t count);
 
 /* Write a char to the file.
  */
@@ -44,7 +48,7 @@ void bitfile_put_bit(file *f, int bit);
 /* Write a symbol number to the file, bit by bit, MSB-first. The number
  * of bits used to represent the symbol is passed as a parameter.
  */
-void bitfile_put_symbol(file *f, symbol s, int count);
+void bitfile_put_symbol(file *f, symbol s, size_t count);
 
 /* Write any buffered bits, padding the byte with trailing zeros.
  */
