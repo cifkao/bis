@@ -1,10 +1,13 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#define RAW_SYMBOLS 256
-#define BWT_SYMBOLS 257
-#define MTF_SYMBOLS 257
-#define HUF_SYMBOLS 258
+#include <limits.h>
+#include <stdbool.h>
+
+#define RAW_SYMBOLS (UCHAR_MAX+1)
+#define BWT_SYMBOLS (RAW_SYMBOLS+1)
+#define MTF_SYMBOLS BWT_SYMBOLS
+#define HUF_SYMBOLS (MTF_SYMBOLS+1)
 
 typedef unsigned short symbol;
 
@@ -20,11 +23,11 @@ void *malloc_or_die(size_t size);
 
 void *realloc_or_die(void* ptr, size_t size);
 
-void die_eof();
+void die_format();
 
-void die(char *message);
+void die(char *message, ...);
 
-void set_finalize(void (*f)());
+void set_finalize(void (*f)(bool));
 
 
 void dump_data(symbol *data, size_t length, char *label);

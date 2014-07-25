@@ -25,8 +25,9 @@ int bwtcmp(const void *A, const void *B){
 }
 
 void bwt(symbol *_data, symbol *output, size_t _length){
-  data = _data;
   length = _length+1;
+  data = (symbol *)malloc_or_die(length*sizeof(symbol));
+  memcpy(data, _data, (length-1)*sizeof(symbol));
   data[length-1] = BWT_EOF;
 
   // the permutation of rows
@@ -44,6 +45,7 @@ void bwt(symbol *_data, symbol *output, size_t _length){
     output[i] = data[index];
   }
 
+  free(data);
   free(perm);
 }
 

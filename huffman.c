@@ -163,7 +163,7 @@ int decode_symbol(file *f, huf_tree tree){
     return EOF;
   // read until we reach a leaf node
   while(node->left){
-    if(bit==EOF) die_eof();
+    if(bit==EOF) die_format();
     if(!bit)
       node = node->left;
     else
@@ -185,7 +185,7 @@ size_t huf_decode(file *f, symbol **data, huf_tree tree){
   if(s==EOF)
     return 0;
   do{
-    if(s==EOF) die_eof();
+    if(s==EOF) die_format();
     buffer_put(s, &buf);
     s = decode_symbol(f, tree);
   }while(s!=HUF_EOF);
@@ -200,7 +200,7 @@ void read_tree(file *f, huf_node *node, bool isRoot){
   int bit = bitfile_get_bit(f);
   if(bit==EOF){
     if(isRoot) return;
-    else die_eof();
+    else die_format();
   }
   if(!bit){ // internal node
     huf_node *left = (huf_node *)malloc_or_die(2*sizeof(huf_node));
@@ -211,7 +211,7 @@ void read_tree(file *f, huf_node *node, bool isRoot){
     read_tree(f, right, false);
   }else{ // leaf node
     int s = bitfile_get_symbol(f, SYMBOL_LENGTH);
-    if(s==EOF) die_eof();
+    if(s==EOF) die_format();
     node->symbol = s;
     node->left = NULL;
     node->right = NULL;

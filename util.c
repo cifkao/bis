@@ -1,9 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
+#include <stdbool.h>
 #include "main.h"
 #include "util.h"
 
-void (*finalize_f)() = NULL;
+void (*finalize_f)(bool) = NULL;
 
 void buffer_put(symbol c, symbol_buffer *buf){
   if(buf->buffer==NULL){
@@ -34,18 +36,33 @@ void *realloc_or_die(void* ptr, size_t size){
   return m;
 }
 
-void die_eof(){
-  die("Unexpected end of file.");
+void die_format(){
+  die("Invalid file format.");
 }
 
-void die(char *message){
-  fprintf(stderr, "bis: %s\n", message);
+void err(char *message, ...){
+  va_list args;
+  va_start(args, message);
+  fprintf(stderr, "bis: ");
+  vfprintf(stderr, message, args);
+  fprintf(stderr, "\n");
+  va_end(args);
+}
+
+void die(char *message, ...){
+  va_list args;
+  va_start(args, message);
+  fprintf(stderr, "bis: ");
+  vfprintf(stderr, message, args);
+  fprintf(stderr, "\n");
+  va_end(args);
+
   if(finalize_f != NULL)
-    (*finalize_f)();
+    (*finalize_f)(false);
   exit(1);
 }
 
-void set_finalize(void (*f)()){
+void set_finalize(void (*f)(bool)){
   finalize_f = f;
 }
 

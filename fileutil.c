@@ -20,6 +20,9 @@ int file_get_char(file *f){
     f->charBuffSize =
       fread(f->charBuff, sizeof(unsigned char), CHAR_BUFFER_SIZE, f->file);
     f->charBuffPtr = 0;
+
+    if(ferror(f->file))
+      die("Error reading from file.");
   }
   
   if(f->charBuffPtr==f->charBuffSize) return EOF;
@@ -84,6 +87,9 @@ void bitfile_put_symbol(file *f, symbol s, size_t count){
 void file_flush_chars(file *f){
   fwrite(f->charBuff, sizeof(unsigned char), f->charBuffSize, f->file);
   f->charBuffSize = 0;
+
+  if(ferror(f->file))
+    die("Error writing to file.");
 }
 
 void bitfile_flush_bits(file *f){
