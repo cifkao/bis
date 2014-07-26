@@ -7,8 +7,8 @@
 #include "fileutil.h"
 #include "huffman.h"
 
-#define HUF_EOF 257
-#define SYMBOL_LENGTH 9
+#define HUF_EOF (HUF_SYMBOLS-1)
+#define SYMBOL_LENGTH (CHAR_BIT+1)
 
 struct heap_node{
   int freq;
@@ -17,8 +17,7 @@ struct heap_node{
 typedef struct heap_node heap_node;
 
 /* A bit array for storing a code for a symbol. In each byte, the bits
- * of the code are stored so that the least significant bit is the 
- * first one.
+ * of the code are stored so that the least significant bit comes first.
  */
 struct code{
   unsigned char code[(HUF_SYMBOLS+CHAR_BIT-1)/CHAR_BIT];

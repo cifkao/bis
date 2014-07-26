@@ -4,7 +4,7 @@
 #include "util.h"
 #include "bwt.h"
 
-#define BWT_EOF 256
+#define BWT_EOF (BWT_SYMBOLS-1)
 
 symbol *data;
 size_t length;
