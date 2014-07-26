@@ -7,7 +7,6 @@
 #include "bwt.h"
 #include "mtf.h"
 #include "huffman.h"
-#include "main.h"
 
 //#define DEBUG
 
@@ -36,6 +35,7 @@ void compress(){
   for(i=0; i<strlen(SIGNATURE); i++){
     file_put_char(&out, SIGNATURE[i]);
   }
+  file_flush(&out);
 
   while(!ferror(_in) && !feof(_in)){
     unsigned char *block =
@@ -169,9 +169,10 @@ void help(){
       "  -c           write to standard output\n"
       "  -d           decompress\n"
       "  -h           display this help message\n"
-      "  -o OUTFILE   specify output file (default: FILE.bis)\n\n"
-      "If no input file is specified, read standard input and write\n"
-      "to standard output.\n");
+      "  -o OUTFILE   specify output file\n\n"
+      "By default, append the .bis suffix when compressing and strip\n"
+      "it when decompressing (if possible). If no input file is\n"
+      "specified, read standard input and write to standard output.\n");
 }
 
 void finalize(bool success){
@@ -232,8 +233,18 @@ int main(int argc, char **argv){
       if(outFilename==NULL){
         outFilename = (char *)malloc_or_die(
             (strlen(inFilename)+strlen(suffix))*sizeof(char));
+
         strcpy(outFilename, inFilename);
-        strcat(outFilename, suffix);
+        if(action == COMPRESS){
+          strcat(outFilename, suffix); // add the .bis suffix
+        }else if(action == DECOMPRESS){
+          char *suf = strrchr(outFilename, '.');
+          if(suf != NULL && strcmp(suf, suffix)==0){ 
+            *suf = '\0'; // strip the .bis suffix
+          }else{
+            die("Please specify an output file.");
+          }
+        }
       }
     }
 

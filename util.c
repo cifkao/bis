@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include "main.h"
 #include "util.h"
 
 void (*finalize_f)(bool) = NULL;
