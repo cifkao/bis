@@ -1,6 +1,6 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
 #include "util.h"
 #include "fileutil.h"
 #include "rle.h"
@@ -187,9 +187,6 @@ void finalize(bool success){
 int main(int argc, char **argv){
   set_finalize(&finalize);
 
-  _in = stdin;
-  _out = stdout;
-
   int i;
   bool endOfOptions = false;
   for(i=1; i<argc; i++){
@@ -226,7 +223,7 @@ int main(int argc, char **argv){
 
   if(action == COMPRESS || action == DECOMPRESS){
     if(inFilename!=NULL){
-      _in = fopen(inFilename, "r");
+      _in = fopen(inFilename, "rb");
       if(_in==NULL)
         die("Error opening %s for reading.", inFilename);
 
@@ -246,12 +243,20 @@ int main(int argc, char **argv){
           }
         }
       }
+    }else{
+      _in = fsetbin("rb", stdin);
+      if(_in==NULL)
+        die("Error opening standard input as binary.");
     }
 
     if(outFilename && !forceStdout){
-      _out = fopen(outFilename, "w");
+      _out = fopen(outFilename, "wb");
       if(_out==NULL)
         die("Error opening %s for writing.", outFilename);
+    }else{
+      _out = fsetbin("wb", stdout);
+      if(_out==NULL)
+        die("Error opening standard output as binary.");
     }
 
     startedWriting = true;

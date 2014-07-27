@@ -3,6 +3,12 @@
 
 #include <stdio.h>
 
+
+/* Change the access mode of the given file to binary.
+ */
+FILE *fsetbin(const char *mode, FILE *f);
+
+
 #define CHAR_BUFFER_SIZE 4096
 
 /* A data structure for buffered file I/O.

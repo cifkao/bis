@@ -3,6 +3,27 @@
 #include "util.h"
 #include "fileutil.h"
 
+#ifdef _MSC_VER
+#include <io.h>
+#include <fcntl.h>
+#endif
+
+
+FILE *fsetbin(const char *mode, FILE *f){
+
+#ifdef _MSC_VER
+  // MSVC++ doesn't allow filename to be NULL, so we call _setmode instead
+  if(_setmode(_fileno(f), _O_BINARY)==-1)
+    return NULL;
+  else
+    return f;
+#else
+  return freopen(NULL, mode, f);
+#endif
+
+}
+
+
 file file_wrap(FILE *ff){
   file f;
   f.file = ff;
