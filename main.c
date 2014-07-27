@@ -227,7 +227,7 @@ int main(int argc, char **argv){
       if(_in==NULL)
         die("Error opening %s for reading.", inFilename);
 
-      if(outFilename==NULL){
+      if(outFilename==NULL && !forceStdout){
         outFilename = (char *)malloc_or_die(
             (strlen(inFilename)+strlen(suffix))*sizeof(char));
 
