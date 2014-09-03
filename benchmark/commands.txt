@@ -1,0 +1,5 @@
+$bis -b 200k #bis -b 200k
+$bis -b 800k #bis -b 800k
+bzip2 #bzip2
+gzip #gzip
+zip -q "${file}.zip" #zip

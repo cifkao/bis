@@ -1,0 +1,49 @@
+#!/bin/sh
+tmp=/tmp
+while [ -e $tmp ]; do
+  tmp=/tmp/bis-$RANDOM
+done
+mkdir $tmp
+
+if which bis >/dev/null 2>&1; then
+  bis=`which bis`
+else
+  bis='../bis'
+fi
+
+srcdir=corpora/$1
+
+files=`cd "$srcdir"; echo *`
+
+# Table header
+printf "{|\n"
+sed 's/^.*#//' <commands.txt | while read cmd; do
+  printf "!!colspan='2'| <code>%s</code> " "$cmd"
+done
+printf "\n|-\n|\n"
+while read cmd; do
+  printf "|| Ratio (%%) || Took (s)  " "$cmd"
+done <commands.txt
+printf "\n|-\n"
+
+# Testing
+for f in $files; do
+  printf "| $f "
+  sed 's/#.*$//' <commands.txt | while read cmd; do
+    cp "$srcdir/$f" "$tmp/$f"
+    file="$tmp/$f"
+    time=`TIMEFORMAT='%R'; eval time $cmd "$tmp/$f" 2>&1 >/dev/null`
+    rm -f "$tmp/$f"
+
+    compressed=`stat -c %s $tmp/*`
+    uncompressed=`stat -c %s $srcdir/$f`
+    ratio=`echo $compressed/$uncompressed*100 | bc -l`
+    printf "|| %0.1f || %0.3f " $ratio $time
+
+    rm -f $tmp/*
+  done
+  printf "\n|-\n"
+done
+printf "|}\n"
+
+rm -rf $tmp
