@@ -1,4 +1,7 @@
 #!/bin/sh
+export LC_NUMERIC=C
+export LC_COLLATE=C
+
 tmp=/tmp
 while [ -e $tmp ]; do
   tmp=/tmp/bis-$RANDOM
@@ -16,19 +19,19 @@ srcdir=corpora/$1
 files=`cd "$srcdir"; echo *`
 
 # Table header
-printf "{|\n"
+printf "<table>\n<thead>\n<tr>\n  <td></td>\n"
 sed 's/^.*#//' <commands.txt | while read cmd; do
-  printf "!!colspan='2'| <code>%s</code> " "$cmd"
+  printf "  <th colspan='2'><code>%s</code></th>\n" "$cmd"
 done
-printf "\n|-\n|\n"
+printf "</tr>\n<tr>\n  <td></td>\n  "
 while read cmd; do
-  printf "|| Ratio (%%) || Took (s)  " "$cmd"
+  printf "<td>Ratio (%%)</td><td>Took (s)</td>" "$cmd"
 done <commands.txt
-printf "\n|-\n"
+printf "\n</tr>\n</thead>\n<tbody>\n"
 
 # Testing
 for f in $files; do
-  printf "| $f "
+  printf "<tr>\n  <td>$f</td>\n  "
   sed 's/#.*$//' <commands.txt | while read cmd; do
     cp "$srcdir/$f" "$tmp/$f"
     file="$tmp/$f"
@@ -38,12 +41,12 @@ for f in $files; do
     compressed=`stat -c %s $tmp/*`
     uncompressed=`stat -c %s $srcdir/$f`
     ratio=`echo $compressed/$uncompressed*100 | bc -l`
-    printf "|| %0.1f || %0.3f " $ratio $time
+    printf "<td>%0.1f</td><td>%0.3f</td>" $ratio $time
 
     rm -f $tmp/*
   done
-  printf "\n|-\n"
+  printf "\n</tr>\n"
 done
-printf "|}\n"
+printf "</tbody>\n</table>\n"
 
 rm -rf $tmp
